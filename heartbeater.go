@@ -45,7 +45,11 @@ func NewHeartbeater(
 
 func (heartbeater *heartbeater) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	for !heartbeater.register(heartbeater.logger.Session("register")) {
-		time.Sleep(time.Second)
+		select {
+		case <-time.After(time.Second):
+		case <-signals:
+			return nil
+		}
 	}
 
 	close(ready)
