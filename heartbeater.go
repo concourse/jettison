@@ -44,7 +44,9 @@ func NewHeartbeater(
 }
 
 func (heartbeater *heartbeater) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
-	heartbeater.register(heartbeater.logger.Session("register"))
+	for !heartbeater.register(heartbeater.logger.Session("register")) {
+		time.Sleep(time.Second)
+	}
 
 	close(ready)
 
@@ -59,14 +61,14 @@ func (heartbeater *heartbeater) Run(signals <-chan os.Signal, ready chan<- struc
 	}
 }
 
-func (heartbeater *heartbeater) register(logger lager.Logger) {
+func (heartbeater *heartbeater) register(logger lager.Logger) bool {
 	logger.Info("start")
 	defer logger.Info("done")
 
 	containers, err := heartbeater.gardenClient.Containers(nil)
 	if err != nil {
 		logger.Error("failed-to-fetch-containers", err)
-		return
+		return false
 	}
 
 	registration := atc.Worker{
@@ -77,13 +79,13 @@ func (heartbeater *heartbeater) register(logger lager.Logger) {
 	payload, err := json.Marshal(registration)
 	if err != nil {
 		logger.Error("failed-to-marshal-registration", err)
-		return
+		return false
 	}
 
 	request, err := heartbeater.atcEndpoint.CreateRequest(atc.RegisterWorker, nil, bytes.NewBuffer(payload))
 	if err != nil {
 		logger.Error("failed-to-construct-request", err)
-		return
+		return false
 	}
 
 	request.URL.RawQuery = url.Values{
@@ -93,7 +95,7 @@ func (heartbeater *heartbeater) register(logger lager.Logger) {
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		logger.Error("failed-to-register", err)
-		return
+		return false
 	}
 
 	defer response.Body.Close()
@@ -102,7 +104,11 @@ func (heartbeater *heartbeater) register(logger lager.Logger) {
 		logger.Error("bad-response", nil, lager.Data{
 			"status-code": response.StatusCode,
 		})
+
+		return false
 	}
+
+	return true
 }
 
 func (heartbeater *heartbeater) ttl() time.Duration {
