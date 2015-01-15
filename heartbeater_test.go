@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	garden "github.com/cloudfoundry-incubator/garden/api"
-	gfakes "github.com/cloudfoundry-incubator/garden/api/fakes"
+	"github.com/cloudfoundry-incubator/garden"
+	gfakes "github.com/cloudfoundry-incubator/garden/fakes"
 	"github.com/concourse/atc"
 	. "github.com/concourse/gate"
 	. "github.com/onsi/ginkgo"

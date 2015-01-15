@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	garden "github.com/cloudfoundry-incubator/garden/api"
+	"github.com/cloudfoundry-incubator/garden"
 	"github.com/concourse/atc"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/ifrit"
