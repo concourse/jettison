@@ -24,13 +24,13 @@ var heartbeatInterval = flag.Duration(
 var gardenAddr = flag.String(
 	"gardenAddr",
 	"127.0.0.1:7777",
-	"garden API host:port. leave empty for dynamic registration.",
+	"garden API host:port",
 )
 
 var atcAPIURL = flag.String(
 	"atcAPIURL",
 	"http://127.0.0.1:8080",
-	"ATC API URL to register with.",
+	"ATC API URL to register with",
 )
 
 func main() {
