@@ -30,6 +30,9 @@ var _ = Describe("Heartbeater", func() {
 
 		addrToRegister string
 		interval       time.Duration
+		resourceTypes  []atc.WorkerResourceType
+
+		expectedWorker atc.Worker
 
 		fakeGardenClient *gfakes.FakeClient
 		fakeATC          *ghttp.Server
@@ -44,6 +47,18 @@ var _ = Describe("Heartbeater", func() {
 
 		addrToRegister = "1.2.3.4:7777"
 		interval = time.Second
+		resourceTypes = []atc.WorkerResourceType{
+			{
+				Type:  "git",
+				Image: "docker:///concourse/git-resource",
+			},
+		}
+
+		expectedWorker = atc.Worker{
+			Addr:             addrToRegister,
+			ActiveContainers: 2,
+			ResourceTypes:    resourceTypes,
+		}
 
 		fakeATC = ghttp.NewServer()
 
@@ -69,7 +84,9 @@ var _ = Describe("Heartbeater", func() {
 
 	JustBeforeEach(func() {
 		atcEndpoint := rata.NewRequestGenerator(fakeATC.URL(), atc.Routes)
-		heartbeater = ifrit.Invoke(NewHeartbeater(logger, addrToRegister, interval, fakeGardenClient, atcEndpoint))
+		heartbeater = ifrit.Invoke(
+			NewHeartbeater(logger, addrToRegister, interval, fakeGardenClient, atcEndpoint, resourceTypes),
+		)
 	})
 
 	AfterEach(func() {
@@ -105,7 +122,7 @@ var _ = Describe("Heartbeater", func() {
 
 		It("immediately registers", func() {
 			Ω(registrations).Should(Receive(Equal(registration{
-				worker: atc.Worker{Addr: addrToRegister, ActiveContainers: 2},
+				worker: expectedWorker,
 				ttl:    2 * interval,
 			})))
 		})
@@ -113,7 +130,7 @@ var _ = Describe("Heartbeater", func() {
 		Context("when the interval passes after the initial registration", func() {
 			JustBeforeEach(func() {
 				Ω(registrations).Should(Receive(Equal(registration{
-					worker: atc.Worker{Addr: addrToRegister, ActiveContainers: 2},
+					worker: expectedWorker,
 					ttl:    2 * interval,
 				})))
 
@@ -121,8 +138,10 @@ var _ = Describe("Heartbeater", func() {
 			})
 
 			It("heartbeats", func() {
+				expectedWorker.ActiveContainers = 5
+
 				Eventually(registrations).Should(Receive(Equal(registration{
-					worker: atc.Worker{Addr: addrToRegister, ActiveContainers: 5},
+					worker: expectedWorker,
 					ttl:    2 * interval,
 				})))
 			})

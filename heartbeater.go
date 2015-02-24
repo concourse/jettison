@@ -23,6 +23,8 @@ type heartbeater struct {
 
 	gardenClient garden.Client
 	atcEndpoint  *rata.RequestGenerator
+
+	resourceTypes []atc.WorkerResourceType
 }
 
 func NewHeartbeater(
@@ -31,6 +33,7 @@ func NewHeartbeater(
 	interval time.Duration,
 	gardenClient garden.Client,
 	atcEndpoint *rata.RequestGenerator,
+	resourceTypes []atc.WorkerResourceType,
 ) ifrit.Runner {
 	return &heartbeater{
 		logger: logger,
@@ -40,6 +43,8 @@ func NewHeartbeater(
 
 		gardenClient: gardenClient,
 		atcEndpoint:  atcEndpoint,
+
+		resourceTypes: resourceTypes,
 	}
 }
 
@@ -78,6 +83,7 @@ func (heartbeater *heartbeater) register(logger lager.Logger) bool {
 	registration := atc.Worker{
 		Addr:             heartbeater.addrToRegister,
 		ActiveContainers: len(containers),
+		ResourceTypes:    heartbeater.resourceTypes,
 	}
 
 	payload, err := json.Marshal(registration)

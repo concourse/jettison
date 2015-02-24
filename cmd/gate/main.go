@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	_ "net/http/pprof"
 	"os"
@@ -33,6 +34,21 @@ var atcAPIURL = flag.String(
 	"ATC API URL to register with",
 )
 
+var resourceTypes = flag.String(
+	"resourceTypes",
+	`[
+		{"type": "archive", "image": "docker:///concourse/archive-resource" },
+		{"type": "docker-image", "image": "docker:///concourse/docker-image-resource" },
+		{"type": "git", "image": "docker:///concourse/git-resource" },
+		{"type": "github-release", "image": "docker:///concourse/github-release-resource" },
+		{"type": "s3", "image": "docker:///concourse/s3-resource" },
+		{"type": "semver", "image": "docker:///concourse/semver-resource" },
+		{"type": "time", "image": "docker:///concourse/time-resource" },
+		{"type": "tracker", "image": "docker:///concourse/tracker-resource" }
+	]`,
+	"map of resource type to its rootfs",
+)
+
 func main() {
 	flag.Parse()
 
@@ -43,13 +59,28 @@ func main() {
 
 	gardenClient := gclient.New(gconn.New("tcp", *gardenAddr))
 
-	running := ifrit.Invoke(gate.NewHeartbeater(logger, *gardenAddr, *heartbeatInterval, gardenClient, atcEndpoint))
+	var resourceTypesNG []atc.WorkerResourceType
+	err := json.Unmarshal([]byte(*resourceTypes), &resourceTypesNG)
+	if err != nil {
+		logger.Fatal("invalid-resource-types", err)
+	}
+
+	running := ifrit.Invoke(
+		gate.NewHeartbeater(
+			logger,
+			*gardenAddr,
+			*heartbeatInterval,
+			gardenClient,
+			atcEndpoint,
+			resourceTypesNG,
+		),
+	)
 
 	logger.Info("started", lager.Data{
 		"interval": (*heartbeatInterval).String(),
 	})
 
-	err := <-running.Wait()
+	err = <-running.Wait()
 	if err != nil {
 		logger.Error("exited-with-failure", err)
 		os.Exit(1)
