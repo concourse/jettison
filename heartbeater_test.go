@@ -58,6 +58,8 @@ var _ = Describe("Heartbeater", func() {
 			Addr:             addrToRegister,
 			ActiveContainers: 2,
 			ResourceTypes:    resourceTypes,
+			Platform:         "some-platform",
+			Tags:             []string{"some", "tags"},
 		}
 
 		fakeATC = ghttp.NewServer()
@@ -85,7 +87,18 @@ var _ = Describe("Heartbeater", func() {
 	JustBeforeEach(func() {
 		atcEndpoint := rata.NewRequestGenerator(fakeATC.URL(), atc.Routes)
 		heartbeater = ifrit.Invoke(
-			NewHeartbeater(logger, addrToRegister, interval, fakeGardenClient, atcEndpoint, resourceTypes),
+			NewHeartbeater(
+				logger,
+				interval,
+				fakeGardenClient,
+				atcEndpoint,
+				atc.Worker{
+					Addr:          addrToRegister,
+					ResourceTypes: resourceTypes,
+					Platform:      "some-platform",
+					Tags:          []string{"some", "tags"},
+				},
+			),
 		)
 	})
 

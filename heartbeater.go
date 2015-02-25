@@ -18,33 +18,30 @@ import (
 type heartbeater struct {
 	logger lager.Logger
 
-	addrToRegister string
-	interval       time.Duration
+	interval time.Duration
 
 	gardenClient garden.Client
 	atcEndpoint  *rata.RequestGenerator
 
-	resourceTypes []atc.WorkerResourceType
+	registration atc.Worker
 }
 
 func NewHeartbeater(
 	logger lager.Logger,
-	addrToRegister string,
 	interval time.Duration,
 	gardenClient garden.Client,
 	atcEndpoint *rata.RequestGenerator,
-	resourceTypes []atc.WorkerResourceType,
+	worker atc.Worker,
 ) ifrit.Runner {
 	return &heartbeater{
 		logger: logger,
 
-		addrToRegister: addrToRegister,
-		interval:       interval,
+		interval: interval,
 
 		gardenClient: gardenClient,
 		atcEndpoint:  atcEndpoint,
 
-		resourceTypes: resourceTypes,
+		registration: worker,
 	}
 }
 
@@ -80,13 +77,9 @@ func (heartbeater *heartbeater) register(logger lager.Logger) bool {
 		return false
 	}
 
-	registration := atc.Worker{
-		Addr:             heartbeater.addrToRegister,
-		ActiveContainers: len(containers),
-		ResourceTypes:    heartbeater.resourceTypes,
-	}
+	heartbeater.registration.ActiveContainers = len(containers)
 
-	payload, err := json.Marshal(registration)
+	payload, err := json.Marshal(heartbeater.registration)
 	if err != nil {
 		logger.Error("failed-to-marshal-registration", err)
 		return false

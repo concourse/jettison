@@ -5,6 +5,7 @@ import (
 	"flag"
 	_ "net/http/pprof"
 	"os"
+	"strings"
 	"time"
 
 	gclient "github.com/cloudfoundry-incubator/garden/client"
@@ -49,6 +50,18 @@ var resourceTypes = flag.String(
 	"map of resource type to its rootfs",
 )
 
+var platform = flag.String(
+	"platform",
+	"linux",
+	"platform that this gate is advertising",
+)
+
+var tags = flag.String(
+	"tags",
+	"",
+	"comma separated list of tags that should be advertised",
+)
+
 func main() {
 	flag.Parse()
 
@@ -65,14 +78,30 @@ func main() {
 		logger.Fatal("invalid-resource-types", err)
 	}
 
+	workerTags := []string{}
+	for _, tag := range strings.Split(*tags, ",") {
+		stripped := strings.TrimSpace(tag)
+		if len(stripped) == 0 {
+			continue
+		}
+
+		workerTags = append(workerTags, stripped)
+	}
+
+	workerToRegister := atc.Worker{
+		Addr:          *gardenAddr,
+		ResourceTypes: resourceTypesNG,
+		Platform:      *platform,
+		Tags:          workerTags,
+	}
+
 	running := ifrit.Invoke(
 		gate.NewHeartbeater(
 			logger,
-			*gardenAddr,
 			*heartbeatInterval,
 			gardenClient,
 			atcEndpoint,
-			resourceTypesNG,
+			workerToRegister,
 		),
 	)
 
