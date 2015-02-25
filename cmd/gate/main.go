@@ -52,7 +52,7 @@ var resourceTypes = flag.String(
 
 var platform = flag.String(
 	"platform",
-	"linux",
+	"",
 	"platform that this gate is advertising",
 )
 
@@ -67,6 +67,10 @@ func main() {
 
 	logger := lager.NewLogger("gate")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+
+	if *platform == "" {
+		logger.Fatal("platform-not-specified", nil)
+	}
 
 	atcEndpoint := rata.NewRequestGenerator(*atcAPIURL, atc.Routes)
 
