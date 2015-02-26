@@ -6,6 +6,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 
 	gclient "github.com/cloudfoundry-incubator/garden/client"
@@ -14,6 +15,8 @@ import (
 	"github.com/concourse/gate"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/grouper"
+	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
 )
 
@@ -99,14 +102,28 @@ func main() {
 		Tags:          workerTags,
 	}
 
+	heartbeater := gate.NewHeartbeater(
+		logger,
+		*heartbeatInterval,
+		gardenClient,
+		atcEndpoint,
+		workerToRegister,
+	)
+
+	drainer := gate.NewDrainer(
+		logger,
+		gardenClient,
+	)
+
 	running := ifrit.Invoke(
-		gate.NewHeartbeater(
-			logger,
-			*heartbeatInterval,
-			gardenClient,
-			atcEndpoint,
-			workerToRegister,
-		),
+		sigmon.New(grouper.NewParallel(nil, grouper.Members{
+			{"heartbeater", heartbeater},
+			{"drainer", ifrit.RunFunc(func(signals <-chan os.Signal, ready chan<- struct{}) error {
+				close(ready)
+				<-signals
+				return drainer.Drain()
+			})},
+		}), syscall.SIGINT, syscall.SIGTERM),
 	)
 
 	logger.Info("started", lager.Data{
