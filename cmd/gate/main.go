@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	_ "net/http/pprof"
 	"os"
@@ -72,7 +73,7 @@ func main() {
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
 	if *platform == "" {
-		logger.Fatal("platform-not-specified", nil)
+		logger.Fatal("platform-not-specified", errors.New("a -platform must be specified"))
 	}
 
 	atcEndpoint := rata.NewRequestGenerator(*atcAPIURL, atc.Routes)
