@@ -54,7 +54,7 @@ var _ = Describe("Drainer", func() {
 				Ω(fakeGardenClient.ContainersCallCount()).Should(Equal(1))
 				queriedProperties := fakeGardenClient.ContainersArgsForCall(0)
 
-				Ω(queriedProperties).Should(HaveKeyWithValue("ephemeral", "true"))
+				Ω(queriedProperties).Should(HaveKeyWithValue("concourse:ephemeral", "true"))
 			})
 
 			By("taking each of the returned containers and destroying it", func() {

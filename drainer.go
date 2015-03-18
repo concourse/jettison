@@ -24,7 +24,7 @@ func NewDrainer(
 
 func (d *Drainer) Drain() error {
 	containers, err := d.client.Containers(garden.Properties{
-		"ephemeral": "true",
+		"concourse:ephemeral": "true",
 	})
 	if err != nil {
 		return err
