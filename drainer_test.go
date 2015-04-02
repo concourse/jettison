@@ -1,4 +1,4 @@
-package gate_test
+package jettison_test
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/garden"
 	gfakes "github.com/cloudfoundry-incubator/garden/fakes"
 
-	. "github.com/concourse/gate"
+	. "github.com/concourse/jettison"
 )
 
 var _ = Describe("Drainer", func() {

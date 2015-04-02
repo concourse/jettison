@@ -1,4 +1,4 @@
-package gate
+package jettison
 
 import (
 	"github.com/cloudfoundry-incubator/garden"

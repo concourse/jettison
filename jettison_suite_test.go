@@ -1,4 +1,4 @@
-package gate_test
+package jettison_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestGate(t *testing.T) {
+func TestJettison(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Gate Suite")
+	RunSpecs(t, "Jettison Suite")
 }

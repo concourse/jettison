@@ -1,3 +1,3 @@
-# gate
+# jettison
 
-Registers a Garden worker on an interval to a given ATC endpoint.
+Destroys all ephemeral containers on the given Garden server.
