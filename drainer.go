@@ -34,7 +34,7 @@ func (d *Drainer) Drain() error {
 
 	for _, container := range containers {
 		handle := container.Handle()
-		err := d.client.Destroy(container.Handle())
+		err := d.client.Destroy(handle)
 		if err != nil {
 			result = multierror.Append(result, err)
 
