@@ -48,23 +48,23 @@ var _ = Describe("Drainer", func() {
 
 		It("cleans up ephemeral containers", func() {
 			err := drainer.Drain()
-			Ω(err).ShouldNot(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 
 			By("querying for ephemeral containers", func() {
-				Ω(fakeGardenClient.ContainersCallCount()).Should(Equal(1))
+				Expect(fakeGardenClient.ContainersCallCount()).To(Equal(1))
 				queriedProperties := fakeGardenClient.ContainersArgsForCall(0)
 
-				Ω(queriedProperties).Should(HaveKeyWithValue("concourse:ephemeral", "true"))
+				Expect(queriedProperties).To(HaveKeyWithValue("concourse:ephemeral", "true"))
 			})
 
 			By("taking each of the returned containers and destroying it", func() {
-				Ω(fakeGardenClient.DestroyCallCount()).Should(Equal(2))
+				Expect(fakeGardenClient.DestroyCallCount()).To(Equal(2))
 
 				destroyedHandle := fakeGardenClient.DestroyArgsForCall(0)
-				Ω(destroyedHandle).Should(Equal("container-a"))
+				Expect(destroyedHandle).To(Equal("container-a"))
 
 				destroyedHandle = fakeGardenClient.DestroyArgsForCall(1)
-				Ω(destroyedHandle).Should(Equal("container-b"))
+				Expect(destroyedHandle).To(Equal("container-b"))
 			})
 		})
 
@@ -81,9 +81,9 @@ var _ = Describe("Drainer", func() {
 
 			It("keeps on goin' but returns a composite error", func() {
 				err := drainer.Drain()
-				Ω(err).Should(HaveOccurred())
+				Expect(err).To(HaveOccurred())
 
-				Ω(fakeGardenClient.DestroyCallCount()).Should(Equal(2))
+				Expect(fakeGardenClient.DestroyCallCount()).To(Equal(2))
 			})
 		})
 	})
@@ -97,7 +97,7 @@ var _ = Describe("Drainer", func() {
 
 		It("re-returns that error", func() {
 			err := drainer.Drain()
-			Ω(err).Should(MatchError(disaster))
+			Expect(err).To(MatchError(disaster))
 		})
 	})
 })
